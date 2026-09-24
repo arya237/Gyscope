@@ -15,7 +15,14 @@ func tickCmd() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg.(type) {
+	switch msg := msg.(type) {
+
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+
+		return m, nil
+
 	case systemTickMsg:
 		cpuState, err := m.cpuReader.GetState()
 		if err != nil {

@@ -14,6 +14,8 @@ type Model struct {
 	memory       memory.Memory
 	memoryErr    error
 	cpuErr       error
+	width        int
+	height       int
 }
 
 func NewModel(cpuReader CPUReader, memoryReader MemoryReader) Model {
