@@ -14,7 +14,7 @@ func tickCmd() tea.Cmd {
 	})
 }
 
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg.(type) {
 	case systemTickMsg:
 		cpuState, err := m.cpuReader.GetState()

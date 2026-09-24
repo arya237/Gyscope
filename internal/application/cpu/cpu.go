@@ -18,7 +18,7 @@ func NewCpuUseCase(source CPUDataSource) *CpuUseCase {
 func (u *CpuUseCase) GetState() (cpu.CPU, error) {
 	current, err := u.source.Read()
 	if err != nil {
-		return nil, err
+		return cpu.CPU{}, err
 	}
 
 	var usage float64
