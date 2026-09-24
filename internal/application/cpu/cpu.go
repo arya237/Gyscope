@@ -17,7 +17,33 @@ func NewCpuUseCase(source CPUDataSource) *CpuUseCase{
 }
 
 
-func (u *CpuUseCase) GetState() (cpu.CPU, error){
+func (u *CpuUseCase) GetState() (*cpu.CPU, error){
+	current, err := u.source.Read()
+	if err != nil{
+		return nil, err
+	}
+
+	var usage float64
+
+	if u.previousCPUTimes != nil{
+		usage = calculateUsage(*u.previousCPUTimes, current.Times)
+	}
+
+	u.previousCPUTimes = &current.Times
+
+	return &cpu.CPU{
+		Usage: usage,
+		LogicalCores: current.LogicalCores,
+		LoadAverage: cpu.LoadAverage{
+			OneMinute: current.LoadAverage.OneMinute,
+			FiveMinutes: current.LoadAverage.FiveMinutes,
+			FifteenMinutes: current.LoadAverage.FifteenMinutes,
+		},
+	}, nil
+}
+
+
+func calculateUsage(previous, current CPUTimes) float64{
 
 	panic("not implemented")
 }
