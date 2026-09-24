@@ -10,16 +10,18 @@ import (
 	"runtime"
 )
 
-type LinuxDataSource struct{
-
-}
+type LinuxCPUDataSource struct{}
 
 const (
 	procStatPath    = "/proc/stat"
 	procLoadAvgPath = "/proc/loadavg"
 )
 
-func (l *LinuxDataSource) Read() (applicationcpu.RawCPUState, error){
+func NewLinuxCPUDataSource() *LinuxCPUDataSource{
+	return &LinuxCPUDataSource{}
+}
+
+func (l *LinuxCPUDataSource) Read() (applicationcpu.RawCPUState, error){
 
 	statData, err := os.ReadFile(procStatPath)
 	if err != nil {
@@ -48,7 +50,7 @@ func (l *LinuxDataSource) Read() (applicationcpu.RawCPUState, error){
 	}, nil
 }
 
-func (l *LinuxDataSource)parseCPUTimes(data []byte) (applicationcpu.CPUTimes, error){
+func (l *LinuxCPUDataSource)parseCPUTimes(data []byte) (applicationcpu.CPUTimes, error){
 
 	scanner := bufio.NewScanner(strings.NewReader(string(data)))
 
@@ -95,7 +97,7 @@ func (l *LinuxDataSource)parseCPUTimes(data []byte) (applicationcpu.CPUTimes, er
 }
 
 
-func (l *LinuxDataSource)parseLoadAverage(data []byte)(applicationcpu.RawLoadAverage, error){
+func (l *LinuxCPUDataSource)parseLoadAverage(data []byte)(applicationcpu.RawLoadAverage, error){
 	scanner := bufio.NewScanner(strings.NewReader(string(data)))
 
 	for scanner.Scan(){
