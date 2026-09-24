@@ -28,7 +28,7 @@ func (l *LinuxCPUDataSource) Read() (applicationcpu.RawCPUState, error){
 		return applicationcpu.RawCPUState{}, fmt.Errorf("read %s: %w", procStatPath, err)
 	}
 
-	times, err := l.parseCPUTimes(statData)
+	times, err := parseCPUTimes(statData)
 	if err != nil {
 		return applicationcpu.RawCPUState{}, fmt.Errorf("parse cpu times: %w", err)
 	}
@@ -38,7 +38,7 @@ func (l *LinuxCPUDataSource) Read() (applicationcpu.RawCPUState, error){
 		return applicationcpu.RawCPUState{}, fmt.Errorf("read %s: %w", procLoadAvgPath, err)
 	}
 
-	loadAverage, err := l.parseLoadAverage(loadAvgData)
+	loadAverage, err := parseLoadAverage(loadAvgData)
 	if err != nil{
 		return applicationcpu.RawCPUState{}, fmt.Errorf("parse load average: %w", err)
 	}
@@ -50,7 +50,7 @@ func (l *LinuxCPUDataSource) Read() (applicationcpu.RawCPUState, error){
 	}, nil
 }
 
-func (l *LinuxCPUDataSource)parseCPUTimes(data []byte) (applicationcpu.CPUTimes, error){
+func parseCPUTimes(data []byte) (applicationcpu.CPUTimes, error){
 
 	scanner := bufio.NewScanner(strings.NewReader(string(data)))
 
@@ -97,7 +97,7 @@ func (l *LinuxCPUDataSource)parseCPUTimes(data []byte) (applicationcpu.CPUTimes,
 }
 
 
-func (l *LinuxCPUDataSource)parseLoadAverage(data []byte)(applicationcpu.RawLoadAverage, error){
+func parseLoadAverage(data []byte)(applicationcpu.RawLoadAverage, error){
 	scanner := bufio.NewScanner(strings.NewReader(string(data)))
 
 	for scanner.Scan(){
@@ -113,7 +113,7 @@ func (l *LinuxCPUDataSource)parseLoadAverage(data []byte)(applicationcpu.RawLoad
 			value, err := strconv.ParseFloat(fields[i], 64)
 
 			if err != nil{
-				return applicationcpu.RawLoadAverage{}, fmt.Errorf("invalid cpu stats value %q: %w", fields[i+1], err)
+				return applicationcpu.RawLoadAverage{}, fmt.Errorf("invalid cpu stats value %q: %w", fields[i], err)
 			}
 
 			values[i] = value
