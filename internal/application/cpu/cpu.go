@@ -44,6 +44,21 @@ func (u *CpuUseCase) GetState() (*cpu.CPU, error){
 
 
 func calculateUsage(previous, current CPUTimes) float64{
+	user := current.User - previous.User
+	system := current.System - previous.System
+	idle := current.Idle - previous.Idle
+	iowait := current.IOWait - previous.IOWait
+	irq := current.IRQ - previous.IRQ
+	softirq := current.SoftIRQ - previous.SoftIRQ
+	steal := current.Steal - previous.Steal
 
-	panic("not implemented")
+	total := user + system + idle + iowait + irq + softirq + steal
+
+	if total == 0{
+		return 0
+	}
+
+	idleTime := idle + iowait
+
+	return float64(total-idleTime) / float64(total) * 100
 }
