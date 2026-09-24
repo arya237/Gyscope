@@ -71,7 +71,7 @@ func parseCPUTimes(data []byte) (applicationcpu.CPUTimes, error){
 			
 			value, err := strconv.ParseUint(fields[i + 1], 10, 64)
 			if err != nil{
-				return applicationcpu.CPUTimes{}, fmt.Errorf("invalid cpu stats value %q: %w", fields[i+1], err)
+				return applicationcpu.CPUTimes{}, fmt.Errorf("invalid load average %q: %w", fields[i+1], err)
 			}
 
 			values[i] = value
@@ -90,7 +90,7 @@ func parseCPUTimes(data []byte) (applicationcpu.CPUTimes, error){
 
 	
 	if err := scanner.Err(); err != nil {
-		return applicationcpu.CPUTimes{}, fmt.Errorf("reading cpu stats: %w", err)
+		return applicationcpu.CPUTimes{}, fmt.Errorf("reading load average: %w", err)
 	}
 
 	return applicationcpu.CPUTimes{}, fmt.Errorf("cpu stats not found")
