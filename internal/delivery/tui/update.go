@@ -41,6 +41,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		return m, tickCmd()
+
+	case tea.KeyPressMsg:
+		if msg.String() == "q" {
+			return m, tea.Quit
+		}
 	}
 
 	return m, nil
