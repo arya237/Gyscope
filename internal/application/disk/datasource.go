@@ -1,5 +1,5 @@
 package disk
 
-type DataSource interface {
+type DiskDataSource interface {
 	Read() (RawDiskState, error)
 }
