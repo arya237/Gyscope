@@ -2,6 +2,7 @@ package tui
 
 import (
 	"Gyscope/internal/domain/cpu"
+	"Gyscope/internal/domain/disk"
 	"Gyscope/internal/domain/memory"
 )
 
@@ -11,4 +12,8 @@ type CPUReader interface {
 
 type MemoryReader interface {
 	GetState() (memory.Memory, error)
+}
+
+type DiskReader interface {
+	GetState() (disk.Disk, error)
 }

@@ -2,7 +2,9 @@ package tui
 
 import (
 	domaincpu "Gyscope/internal/domain/cpu"
+	domaindisk "Gyscope/internal/domain/disk"
 	domainmemory "Gyscope/internal/domain/memory"
+
 	"fmt"
 	"strings"
 
@@ -16,7 +18,7 @@ func (m Model) View() tea.View {
 	}
 
 	gap := 2
-	panelWidth := (m.width - gap - 6) / 2
+	panelWidth := (m.width - 2*gap - 6) / 3
 	panelHeight := 9
 
 	if panelWidth <= 0 {
@@ -35,10 +37,17 @@ func (m Model) View() tea.View {
 		panelHeight,
 	)
 
+	diskPanel := renderDisk(
+		m.disk,
+		panelWidth,
+		panelHeight,
+	)
+
 	panels := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		cpuPanel,
 		memoryPanel,
+		diskPanel,
 	)
 
 	header := renderHeader(m.width)
@@ -240,6 +249,27 @@ func renderMemory(
 		width,
 		height,
 	)
+}
+
+func renderDisk(disk domaindisk.Disk, width int, height int) string {
+	barWidth := width - 6
+
+	usage := usageStyle(disk.Usage).Render(
+		fmt.Sprintf("%.1f%%", disk.Usage),
+	)
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Left,
+		labelStyle.Render("DISK"),
+		fmt.Sprintf("Usage      %s", usage),
+		renderProgressBar(disk.Usage, barWidth),
+		"",
+		fmt.Sprintf("Used       %s", formatBytes(disk.Used)),
+		fmt.Sprintf("Free       %s", formatBytes(disk.Free)),
+		fmt.Sprintf("Total      %s", formatBytes(disk.Total)),
+	)
+
+	return renderPanel(content, width, height)
 }
 
 func formatBytes(bytes uint64) string {

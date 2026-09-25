@@ -40,6 +40,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.memoryErr = nil
 		}
 
+		diskState, err := m.diskReader.GetState()
+		if err != nil {
+			m.diskErr = err
+		} else {
+			m.disk = diskState
+			m.diskErr = nil
+		}
+
 		return m, tickCmd()
 
 	case tea.KeyPressMsg:
