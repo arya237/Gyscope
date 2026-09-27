@@ -8,20 +8,31 @@ import (
 	applicationProcess "Gyscope/internal/application/process"
 )
 
-type LinuxProcessDataSource struct {
-	procPath string
-}
+
+const (
+	procPath = "/proc"
+)
+
+type LinuxProcessDataSource struct {}
 
 func NewLinuxProcessDataSource() *LinuxProcessDataSource {
-	return &LinuxProcessDataSource{
-		procPath: "/proc",
-	}
+	return &LinuxProcessDataSource{}
 }
 
-func (s *LinuxProcessDataSource) Read() ([]applicationProcess.RawProcessState, error) {
-	entries, err := os.ReadDir(s.procPath)
+func (s *LinuxProcessDataSource) Read() (applicationProcess.RawProcessSnapshot, error) {
+	entries, err := os.ReadDir(procPath)
 	if err != nil {
-		return nil, err
+		return applicationProcess.RawProcessSnapshot{}, err
+	}
+
+	cpuStatContent, err := os.ReadFile(filepath.Join(procPath, "stat"))
+	if err != nil {
+		return applicationProcess.RawProcessSnapshot{}, err
+	}
+
+	totalCPUTime, err := parseTotalCPUTime(string(cpuStatContent))
+	if err != nil {
+		return applicationProcess.RawProcessSnapshot{}, err
 	}
 
 	processes := make([]applicationProcess.RawProcessState, 0)
@@ -36,7 +47,7 @@ func (s *LinuxProcessDataSource) Read() ([]applicationProcess.RawProcessState, e
 			continue
 		}
 
-		processDir := filepath.Join(s.procPath, entry.Name())
+		processDir := filepath.Join(procPath, entry.Name())
 
 		statContent, err := os.ReadFile(filepath.Join(processDir, "stat"))
 		if err != nil {
@@ -64,5 +75,8 @@ func (s *LinuxProcessDataSource) Read() ([]applicationProcess.RawProcessState, e
 		processes = append(processes, state)
 	}
 
-	return processes, nil
+	return applicationProcess.RawProcessSnapshot{
+		Processes:    processes,
+		TotalCPUTime: totalCPUTime,
+	}, nil
 }

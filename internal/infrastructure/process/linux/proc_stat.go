@@ -8,7 +8,7 @@ import (
 	applicationProcess "Gyscope/internal/application/process"
 )
 
-func parseProcessStat(content string) (applicationProcess.RawProcessStat, error) {
+func parseProcessStat(content string) (applicationProcess.RawProcessState, error) {
 	closeParen := strings.LastIndex(content, ")")
 	if closeParen == -1 {
 		return applicationProcess.RawProcessState{}, fmt.Errorf("invalid process stat")

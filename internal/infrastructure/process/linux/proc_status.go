@@ -6,14 +6,6 @@ import (
 	"strings"
 )
 
-package linux
-
-import (
-"fmt"
-"strconv"
-"strings"
-)
-
 func parseProcessStatus(content string) (uint64, error) {
 	for _, line := range strings.Split(content, "\n") {
 		fields := strings.Fields(line)

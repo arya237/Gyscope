@@ -4,6 +4,7 @@ import (
 	domaincpu "Gyscope/internal/domain/cpu"
 	domaindisk "Gyscope/internal/domain/disk"
 	domainmemory "Gyscope/internal/domain/memory"
+	domainprocess "Gyscope/internal/domain/process"
 
 	"fmt"
 	"strings"
@@ -50,6 +51,18 @@ func (m Model) View() tea.View {
 		diskPanel,
 	)
 
+	processHeight := m.height - panelHeight - 8
+
+	if processHeight <= 3 {
+		return tea.NewView("Terminal is too small")
+	}
+
+	processPanel := renderProcesses(
+		m.processes,
+		m.width,
+		processHeight,
+	)
+
 	header := renderHeader(m.width)
 
 	footer := lipgloss.NewStyle().
@@ -62,6 +75,8 @@ func (m Model) View() tea.View {
 		header,
 		"",
 		panels,
+		"",
+		processPanel,
 		"",
 		footer,
 	)
@@ -268,6 +283,43 @@ func renderDisk(disk domaindisk.Disk, width int, height int) string {
 		fmt.Sprintf("Free       %s", formatBytes(disk.Free)),
 		fmt.Sprintf("Total      %s", formatBytes(disk.Total)),
 	)
+
+	return renderPanel(content, width, height)
+}
+
+func renderProcesses(
+	processes []domainprocess.Process,
+	width int,
+	height int,
+) string {
+	title := labelStyle.Render("PROCESSES")
+
+	lines := []string{
+		title,
+		"",
+		fmt.Sprintf(
+			"%-8s %-24s %10s %12s",
+			"PID",
+			"NAME",
+			"CPU",
+			"MEMORY",
+		),
+	}
+
+	for _, process := range processes {
+		lines = append(
+			lines,
+			fmt.Sprintf(
+				"%-8d %-24s %9.1f%% %11.1f%%",
+				process.PID,
+				process.Name,
+				process.CPUUsage,
+				process.MemoryUsage,
+			),
+		)
+	}
+
+	content := strings.Join(lines, "\n")
 
 	return renderPanel(content, width, height)
 }
