@@ -5,6 +5,7 @@ set -euo pipefail
 REPO="arya237/Gyscope"
 INSTALL_DIR="${HOME}/.local/bin"
 BINARY_NAME="gyscope"
+PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
 
 echo "Installing Gyscope..."
 echo
@@ -64,7 +65,6 @@ curl -fL "$ASSET_URL" -o "$TEMP_FILE"
 echo "Installing Gyscope..."
 
 install -m 755 "$TEMP_FILE" "${INSTALL_DIR}/${BINARY_NAME}"
-export PATH="$HOME/.local/bin:$PATH"
 
 echo
 echo "✓ Gyscope installed successfully."
@@ -74,14 +74,31 @@ echo "  ${INSTALL_DIR}/${BINARY_NAME}"
 echo
 
 if [[ ":${PATH}:" != *":${INSTALL_DIR}:"* ]]; then
-    echo "Note: ${INSTALL_DIR} is not currently in your PATH."
+    echo "${INSTALL_DIR} is not in your PATH."
+
+    if [[ -f "${HOME}/.bashrc" ]]; then
+        if ! grep -Fqx "$PATH_LINE" "${HOME}/.bashrc"; then
+            echo "Adding ${INSTALL_DIR} to ~/.bashrc..."
+            printf '\n%s\n' "$PATH_LINE" >> "${HOME}/.bashrc"
+            echo "✓ PATH configuration added to ~/.bashrc."
+        else
+            echo "PATH configuration already exists in ~/.bashrc."
+        fi
+    else
+        echo "Warning: ~/.bashrc was not found."
+        echo
+        echo "Add this line to your shell configuration:"
+        echo
+        echo "  ${PATH_LINE}"
+    fi
+
     echo
-    echo "Add it to your shell configuration:"
+    echo "Restart your shell or run:"
     echo
-    echo '  export PATH="$HOME/.local/bin:$PATH"'
-    echo
-    echo "Then restart your shell."
+    echo "  source ~/.bashrc"
 else
+    echo "${INSTALL_DIR} is already in your PATH."
+    echo
     echo "Run:"
     echo
     echo "  gyscope"
