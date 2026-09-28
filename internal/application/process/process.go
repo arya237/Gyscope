@@ -116,11 +116,11 @@ func calculateCPUUsage(
 
 func sortAndLimitProcesses(processes []Process.Process) []Process.Process {
 	sort.Slice(processes, func(i, j int) bool {
-		return processes[i].CPUUsage > processes[j].CPUUsage
+		return processes[i].Memory > processes[j].Memory
 	})
 
-	if len(processes) > 10 {
-		processes = processes[:10]
+	if len(processes) > 15 {
+		processes = processes[:15]
 	}
 
 	return processes

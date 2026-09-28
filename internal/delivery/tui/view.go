@@ -303,18 +303,24 @@ func renderProcesses(
 	processes []domainprocess.Process,
 ) string {
 	lines := []string{
-		"PID      NAME                 CPU       MEMORY",
+		fmt.Sprintf(
+			"%-8s %-16s %7s   %-13s",
+			"PID",
+			"NAME",
+			"CPU",
+			"MEMORY",
+		),
 	}
 
 	for _, process := range processes {
 		lines = append(
 			lines,
 			fmt.Sprintf(
-				"%-8d %-16s %7.1f%% %11.1f%%",
+				"%-8d %-16s %7.1f%%   %-13s",
 				process.PID,
 				process.Name,
 				process.CPUUsage,
-				process.MemoryUsage,
+				formatBytes(process.Memory),
 			),
 		)
 	}
@@ -324,9 +330,22 @@ func renderProcesses(
 
 func formatBytes(bytes uint64) string {
 	const gb = 1024 * 1024 * 1024
+	const mb = 1024 * 1024
+	const kb = 1024
 
-	return fmt.Sprintf("%.2f GB", float64(bytes)/gb)
+	switch {
+		case bytes > gb:
+
+			return fmt.Sprintf("%4.2f GB", float64(bytes)/gb)
+
+		case bytes > mb && bytes < gb:
+			return fmt.Sprintf("%4.0f MB", float64(bytes)/mb)
+
+		default:
+			return fmt.Sprintf("%4.0f KB", float64(bytes)/kb)
+	}
 }
+
 
 func altScreenView(s string) tea.View {
 	v := tea.NewView(s)
