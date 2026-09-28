@@ -10,5 +10,6 @@ type CPU struct {
 	Usage        float64
 	LogicalCores int
 	LoadAverage  LoadAverage
+	Temperature  float64
 }
 

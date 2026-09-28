@@ -37,6 +37,7 @@ func (u *CpuUseCase) GetState() (cpu.CPU, error) {
 			FiveMinutes:    current.LoadAverage.FiveMinutes,
 			FifteenMinutes: current.LoadAverage.FifteenMinutes,
 		},
+		Temperature: current.CPUTemp,
 	}, nil
 }
 
