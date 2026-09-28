@@ -48,6 +48,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.diskErr = nil
 		}
 
+		processes, err := m.processReader.GetState()
+		if err != nil {
+			m.processErr = err
+		} else {
+			m.processes = processes
+			m.processErr = nil
+		}
+
 		return m, tickCmd()
 
 	case tea.KeyPressMsg:

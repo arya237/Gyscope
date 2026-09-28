@@ -20,4 +20,5 @@ type RawCPUState struct {
     Times         CPUTimes
     LogicalCores  int
     LoadAverage   RawLoadAverage
+    CPUTemp       float64
 }

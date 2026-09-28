@@ -5,9 +5,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
-	"runtime"
 )
 
 type LinuxCPUDataSource struct{}
@@ -15,6 +16,7 @@ type LinuxCPUDataSource struct{}
 const (
 	procStatPath    = "/proc/stat"
 	procLoadAvgPath = "/proc/loadavg"
+	thermalPath = "/sys/class/thermal/thermal_zone*"
 )
 
 func NewLinuxCPUDataSource() *LinuxCPUDataSource{
@@ -43,10 +45,14 @@ func (l *LinuxCPUDataSource) Read() (applicationcpu.RawCPUState, error){
 		return applicationcpu.RawCPUState{}, fmt.Errorf("parse load average: %w", err)
 	}
 
+	cpuTempreture, err := readCPUTemperature()
+	if err != nil{return applicationcpu.RawCPUState{}, fmt.Errorf("read cpu temperature: %w", err)}
+
 	return applicationcpu.RawCPUState{
 		Times:        times,
 		LogicalCores: runtime.NumCPU(),
 		LoadAverage:  loadAverage,
+		CPUTemp:      cpuTempreture,
 	}, nil
 }
 
@@ -131,4 +137,51 @@ func parseLoadAverage(data []byte)(applicationcpu.RawLoadAverage, error){
 	}
 
 	return applicationcpu.RawLoadAverage{}, fmt.Errorf("cpu stats not found")
+}
+
+func readCPUTemperature() (float64, error) {
+	zones, err := filepath.Glob(thermalPath)
+	if err != nil {
+		return 0, err
+	}
+
+	for _, zone := range zones {
+		typeContent, err := os.ReadFile(filepath.Join(zone, "type"))
+		if err != nil {
+			continue
+		}
+
+		zoneType := strings.TrimSpace(string(typeContent))
+
+		if !isCPUThermalZone(zoneType) {
+			continue
+		}
+
+		tempContent, err := os.ReadFile(filepath.Join(zone, "temp"))
+		if err != nil {
+			return 0, err
+		}
+
+		temp, err := strconv.ParseInt(
+			strings.TrimSpace(string(tempContent)),
+			10,
+			64,
+		)
+		if err != nil {
+			return 0, fmt.Errorf("parse CPU temperature: %w", err)
+		}
+
+		return float64(temp) / 1000, nil
+	}
+
+	return 0, fmt.Errorf("CPU thermal zone not found")
+}
+
+func isCPUThermalZone(zoneType string) bool {
+	switch zoneType {
+	case "x86_pkg_temp", "cpu-thermal", "cpu_thermal":
+		return true
+	default:
+		return false
+	}
 }
