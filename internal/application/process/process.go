@@ -1,9 +1,12 @@
 package process
 
-import Process "Gyscope/internal/domain/process"
+import (
+	Process "Gyscope/internal/domain/process"
+	"sort"
+)
 
 type ProcessUseCase struct {
-	dataSource ProcessDataSource
+	dataSource       ProcessDataSource
 	previousSnapshot *RawProcessSnapshot
 }
 
@@ -22,7 +25,11 @@ func (u *ProcessUseCase) GetState() ([]Process.Process, error) {
 	if u.previousSnapshot == nil {
 		u.previousSnapshot = &currentSnapshot
 
-		return u.buildProcesses(currentSnapshot, nil), nil
+		processes := u.buildProcesses(currentSnapshot, nil)
+		processes = sortAndLimitProcesses(processes)
+		
+		u.previousSnapshot = &currentSnapshot
+		return processes, nil
 	}
 
 	processes := u.buildProcesses(
@@ -30,6 +37,8 @@ func (u *ProcessUseCase) GetState() ([]Process.Process, error) {
 		u.previousSnapshot,
 	)
 
+	processes = sortAndLimitProcesses(processes)
+	
 	u.previousSnapshot = &currentSnapshot
 
 	return processes, nil
@@ -103,4 +112,16 @@ func calculateCPUUsage(
 	}
 
 	return float64(processDelta) / float64(systemDelta) * 100
+}
+
+func sortAndLimitProcesses(processes []Process.Process) []Process.Process {
+	sort.Slice(processes, func(i, j int) bool {
+		return processes[i].CPUUsage > processes[j].CPUUsage
+	})
+
+	if len(processes) > 10 {
+		processes = processes[:10]
+	}
+
+	return processes
 }

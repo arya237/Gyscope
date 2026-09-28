@@ -5,7 +5,7 @@ import (
 	"Gyscope/internal/domain/disk"
 	"Gyscope/internal/domain/memory"
 	"Gyscope/internal/domain/process"
-
+	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 )
 
@@ -22,6 +22,7 @@ type Model struct {
 	cpuErr        error
 	diskErr       error
 	processErr    error
+	processViewport viewport.Model
 	width         int
 	height        int
 }
@@ -37,6 +38,7 @@ func NewModel(
 		memoryReader:  memoryReader,
 		diskReader:    diskReader,
 		processReader: process,
+		processViewport: viewport.New(),
 	}
 }
 

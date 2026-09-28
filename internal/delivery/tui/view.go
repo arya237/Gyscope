@@ -15,34 +15,23 @@ import (
 
 func (m Model) View() tea.View {
 	if m.width <= 0 {
-		return tea.NewView("Starting Gyscope...")
+		return altScreenView("Starting Gyscope...")
 	}
 
-	gap := 2
-	panelWidth := (m.width - 2*gap - 6) / 3
 	panelHeight := 9
 
+	innerWidth := m.width - dashboardStyle.GetHorizontalFrameSize()
+
+	panelWidth := innerWidth / 3
+	lastPanelWidth := innerWidth - 2*panelWidth
+
 	if panelWidth <= 0 {
-		return tea.NewView("Terminal is too small")
+		return altScreenView("Terminal is too small")
 	}
 
-	cpuPanel := renderCPU(
-		m.cpu,
-		panelWidth,
-		panelHeight,
-	)
-
-	memoryPanel := renderMemory(
-		m.memory,
-		panelWidth,
-		panelHeight,
-	)
-
-	diskPanel := renderDisk(
-		m.disk,
-		panelWidth,
-		panelHeight,
-	)
+	cpuPanel := renderCPU(m.cpu, panelWidth, panelHeight)
+	memoryPanel := renderMemory(m.memory, panelWidth, panelHeight)
+	diskPanel := renderDisk(m.disk, lastPanelWidth, panelHeight)
 
 	panels := lipgloss.JoinHorizontal(
 		lipgloss.Top,
@@ -51,24 +40,49 @@ func (m Model) View() tea.View {
 		diskPanel,
 	)
 
-	processHeight := m.height - panelHeight - 8
-
-	if processHeight <= 3 {
-		return tea.NewView("Terminal is too small")
-	}
-
-	processPanel := renderProcesses(
-		m.processes,
-		m.width,
-		processHeight,
-	)
-
-	header := renderHeader(m.width)
+	header := renderHeader(innerWidth)
 
 	footer := lipgloss.NewStyle().
-		Width(m.width).
+		Width(innerWidth).
 		Align(lipgloss.Center).
 		Render("Refreshing every 1s  •  q Quit")
+
+	blankLines := 3
+
+	dashboardFrame := dashboardStyle.GetVerticalFrameSize()
+	panelFrame := panelStyle.GetVerticalFrameSize()
+
+	fixedOverhead := lipgloss.Height(header) +
+		lipgloss.Height(panels) +
+		lipgloss.Height(footer) +
+		dashboardFrame +
+		blankLines
+
+	processHeight := m.height - fixedOverhead
+
+	if processHeight <= panelFrame+3 {
+		return altScreenView("Terminal is too small")
+	}
+
+	processContentHeight := processHeight - panelFrame
+	viewportHeight := processContentHeight - 2
+
+	m.processViewport.SetWidth(innerWidth - panelStyle.GetHorizontalFrameSize())
+	m.processViewport.SetHeight(viewportHeight)
+	m.processViewport.SetContent(renderProcesses(m.processes))
+
+	processContent := lipgloss.JoinVertical(
+		lipgloss.Left,
+		labelStyle.Render("PROCESSES"),
+		"",
+		m.processViewport.View(),
+	)
+
+	processPanel := renderPanel(
+		processContent,
+		innerWidth,
+		processContentHeight,
+	)
 
 	dashboard := lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -85,7 +99,7 @@ func (m Model) View() tea.View {
 		Width(m.width).
 		Render(dashboard)
 
-	return tea.NewView(content)
+	return altScreenView(content)
 }
 
 func renderHeader(width int) string {
@@ -105,15 +119,7 @@ func renderPanel(content string, width, height int) string {
 	return panelStyle.
 		Width(width).
 		Height(height).
-		Render(
-			lipgloss.Place(
-				width,
-				height,
-				lipgloss.Left,
-				lipgloss.Top,
-				content,
-			),
-		)
+		Render(content)
 }
 
 func usageStyle(percent float64) lipgloss.Style {
@@ -289,28 +295,16 @@ func renderDisk(disk domaindisk.Disk, width int, height int) string {
 
 func renderProcesses(
 	processes []domainprocess.Process,
-	width int,
-	height int,
 ) string {
-	title := labelStyle.Render("PROCESSES")
-
 	lines := []string{
-		title,
-		"",
-		fmt.Sprintf(
-			"%-8s %-24s %10s %12s",
-			"PID",
-			"NAME",
-			"CPU",
-			"MEMORY",
-		),
+		"PID      NAME                         CPU       MEMORY",
 	}
 
 	for _, process := range processes {
 		lines = append(
 			lines,
 			fmt.Sprintf(
-				"%-8d %-24s %9.1f%% %11.1f%%",
+				"%-8d %-28s %7.1f%% %11.1f%%",
 				process.PID,
 				process.Name,
 				process.CPUUsage,
@@ -319,13 +313,17 @@ func renderProcesses(
 		)
 	}
 
-	content := strings.Join(lines, "\n")
-
-	return renderPanel(content, width, height)
+	return strings.Join(lines, "\n")
 }
 
 func formatBytes(bytes uint64) string {
 	const gb = 1024 * 1024 * 1024
 
 	return fmt.Sprintf("%.2f GB", float64(bytes)/gb)
+}
+
+func altScreenView(s string) tea.View {
+	v := tea.NewView(s)
+	v.AltScreen = true
+	return v
 }
