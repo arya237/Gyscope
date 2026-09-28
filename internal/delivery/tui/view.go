@@ -184,6 +184,10 @@ func renderCPU(
 		fmt.Sprintf("%.1f%%", cpu.Usage),
 	)
 
+	temperature := usageStyle(cpu.Temperature).Render(
+		fmt.Sprintf("%.1f°C", cpu.Temperature),
+	)
+
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 
@@ -212,6 +216,8 @@ func renderCPU(
 			cpu.LoadAverage.FiveMinutes,
 			cpu.LoadAverage.FifteenMinutes,
 		),
+
+		fmt.Sprintf("Temp	   %s", temperature),
 	)
 
 	return renderPanel(
@@ -297,14 +303,14 @@ func renderProcesses(
 	processes []domainprocess.Process,
 ) string {
 	lines := []string{
-		"PID      NAME                         CPU       MEMORY",
+		"PID      NAME                 CPU       MEMORY",
 	}
 
 	for _, process := range processes {
 		lines = append(
 			lines,
 			fmt.Sprintf(
-				"%-8d %-28s %7.1f%% %11.1f%%",
+				"%-8d %-16s %7.1f%% %11.1f%%",
 				process.PID,
 				process.Name,
 				process.CPUUsage,
