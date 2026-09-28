@@ -4,6 +4,7 @@ import (
 	"Gyscope/internal/domain/cpu"
 	"Gyscope/internal/domain/disk"
 	"Gyscope/internal/domain/memory"
+	Process "Gyscope/internal/domain/process"
 )
 
 type CPUReader interface {
@@ -16,4 +17,8 @@ type MemoryReader interface {
 
 type DiskReader interface {
 	GetState() (disk.Disk, error)
+}
+
+type ProcessReader interface {
+	GetState() ([]Process.Process, error)
 }
