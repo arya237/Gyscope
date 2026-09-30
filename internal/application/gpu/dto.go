@@ -2,8 +2,10 @@ package gpu
 
 type RawGPUState struct {
 	Name        string
+	Vendor      string
 	Usage       float64
 	MemoryUsed  uint64
 	MemoryTotal uint64
 	Temperature float64
 }
+
