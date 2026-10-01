@@ -56,6 +56,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.processErr = nil
 		}
 
+		gpuState, err := m.gpuReader.GetState()
+		if err != nil {
+			m.gpuErr = err
+		} else {
+			m.gpus = gpuState
+			m.gpuErr = nil
+		}
+
 		return m, tickCmd()
 
 	case tea.KeyPressMsg:
