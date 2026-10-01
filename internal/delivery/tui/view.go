@@ -5,6 +5,7 @@ import (
 	domaindisk "Gyscope/internal/domain/disk"
 	domainmemory "Gyscope/internal/domain/memory"
 	domainprocess "Gyscope/internal/domain/process"
+	domaingpu "Gyscope/internal/domain/gpu"
 
 	"fmt"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
+
 
 func (m Model) View() tea.View {
 	if m.width <= 0 {
@@ -22,16 +24,16 @@ func (m Model) View() tea.View {
 
 	innerWidth := m.width - dashboardStyle.GetHorizontalFrameSize()
 
-	panelWidth := innerWidth / 3
-	lastPanelWidth := innerWidth - 2*panelWidth
+	topPanelWidth := innerWidth / 3
+	lastTopPanelWidth := innerWidth - 2*topPanelWidth
 
-	if panelWidth <= 0 {
+	if topPanelWidth <= 0 {
 		return altScreenView("Terminal is too small")
 	}
 
-	cpuPanel := renderCPU(m.cpu, panelWidth, panelHeight)
-	memoryPanel := renderMemory(m.memory, panelWidth, panelHeight)
-	diskPanel := renderDisk(m.disk, lastPanelWidth, panelHeight)
+	cpuPanel := renderCPU(m.cpu, topPanelWidth, panelHeight)
+	memoryPanel := renderMemory(m.memory, topPanelWidth, panelHeight)
+	diskPanel := renderDisk(m.disk, lastTopPanelWidth, panelHeight)
 
 	panels := lipgloss.JoinHorizontal(
 		lipgloss.Top,
@@ -58,16 +60,22 @@ func (m Model) View() tea.View {
 		dashboardFrame +
 		blankLines
 
-	processHeight := m.height - fixedOverhead
+	row2Height := m.height - fixedOverhead
 
-	if processHeight <= panelFrame+3 {
+	if row2Height <= panelFrame+3 {
 		return altScreenView("Terminal is too small")
 	}
 
-	processContentHeight := processHeight - panelFrame
-	viewportHeight := processContentHeight - 2
+	row2ContentHeight := row2Height - panelFrame
 
-	m.processViewport.SetWidth(innerWidth - panelStyle.GetHorizontalFrameSize())
+	gpuPanelWidth := topPanelWidth
+	processPanelWidth := innerWidth - gpuPanelWidth
+
+	gpuPanel := renderGPU(m.gpus, gpuPanelWidth, row2ContentHeight)
+
+	viewportHeight := row2ContentHeight - 2
+
+	m.processViewport.SetWidth(processPanelWidth - panelStyle.GetHorizontalFrameSize())
 	m.processViewport.SetHeight(viewportHeight)
 	m.processViewport.SetContent(renderProcesses(m.processes))
 
@@ -80,8 +88,14 @@ func (m Model) View() tea.View {
 
 	processPanel := renderPanel(
 		processContent,
-		innerWidth,
-		processContentHeight,
+		processPanelWidth,
+		row2ContentHeight,
+	)
+
+	row2 := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		gpuPanel,
+		processPanel,
 	)
 
 	dashboard := lipgloss.JoinVertical(
@@ -90,7 +104,7 @@ func (m Model) View() tea.View {
 		"",
 		panels,
 		"",
-		processPanel,
+		row2,
 		"",
 		footer,
 	)
@@ -116,24 +130,33 @@ func renderHeader(width int) string {
 }
 
 func renderPanel(content string, width, height int) string {
+	lines := strings.Split(content, "\n")
+
+	switch {
+	case len(lines) > height:
+		lines = lines[:height]
+	case len(lines) < height:
+		lines = append(lines, make([]string, height-len(lines))...)
+	}
+
 	return panelStyle.
 		Width(width).
 		Height(height).
-		Render(content)
+		Render(strings.Join(lines, "\n"))
 }
 
 func usageStyle(percent float64) lipgloss.Style {
 	switch {
-	case percent < 25:
+	case percent < 20:
 		return usageGreenStyle
 
-	case percent >= 25 && percent < 50:
+	case percent >= 20 && percent < 40:
 		return usageGreenYellowStyle
 
-	case percent >= 50 && percent < 75:
+	case percent >= 40 && percent < 60:
 		return usageYellowStyle
 
-	case percent >= 75 && percent < 85:
+	case percent >= 60 && percent < 80:
 		return usageOrangeStyle
 
 	default:
@@ -155,14 +178,13 @@ func renderProgressBar(percent float64, width int) string {
 	}
 
 	filled := int(percent / 100 * float64(width))
+	style := usageStyle(percent)
 
 	var bar strings.Builder
 
-	for i := 0; i < filled; i++ {
-		position := float64(i) / float64(width) * 100
-
-		bar.WriteString(usageStyle(position).Render("█"))
-	}
+	bar.WriteString(
+		style.Render(strings.Repeat("█", filled)),
+	)
 
 	bar.WriteString(
 		progressEmptyStyle.Render(
@@ -326,6 +348,48 @@ func renderProcesses(
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func renderGPU(gpus []domaingpu.GPU, width, height int) string {
+	if len(gpus) == 0 {
+		content := lipgloss.JoinVertical(
+			lipgloss.Left,
+			labelStyle.Render("GPU"),
+			"",
+			"No GPU detected",
+		)
+		return renderPanel(content, width, height)
+	}
+
+	barWidth := width - 6
+
+	lines := []string{labelStyle.Render("GPU")}
+
+	for i, g := range gpus {
+		name := g.Name
+		if name == "" {
+			name = fmt.Sprintf("GPU %d", i)
+		}
+
+		usage := usageStyle(g.Usage).Render(
+			fmt.Sprintf("%.1f%%", g.Usage),
+		)
+
+		lines = append(
+			lines,
+			"",
+			valueStyle.Render(name),
+			fmt.Sprintf("Usage  %s", usage),
+			renderProgressBar(g.Usage, barWidth),
+			fmt.Sprintf(
+				"Mem    %s / %s",
+				formatBytes(g.MemoryUsed),
+				formatBytes(g.MemoryTotal),
+			),
+		)
+	}
+
+	return renderPanel(strings.Join(lines, "\n"), width, height)
 }
 
 func formatBytes(bytes uint64) string {
