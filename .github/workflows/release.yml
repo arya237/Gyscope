@@ -30,12 +30,16 @@ jobs:
         run: |
           go build -o gyscope-linux-amd64 ./cmd/Gyscope
 
+      - name: Install ARM64 cross compiler
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+
       - name: Build Linux arm64
         env:
           GOOS: linux
           GOARCH: arm64
-        run: |
-          go build -o gyscope-linux-arm64 ./cmd/Gyscope
+          CGO_ENABLED: 1
+          CC: aarch64-linux-gnu-gcc
+        run: go build -o gyscope-linux-arm64 ./cmd/Gyscope
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
