@@ -19,6 +19,19 @@ func newNVIDIABackend() *nvidiaBackend {
 func (b *nvidiaBackend) Read(
 	devices []gpuDevice,
 ) ([]applicationGPU.RawGPUState, error) {
+
+	nvidiaDevices := make([]gpuDevice, 0)
+
+	for _, device := range devices {
+        if device.Vendor == "NVIDIA" {
+            nvidiaDevices = append(nvidiaDevices, device)
+        }
+    }
+
+	if len(nvidiaDevices) == 0 {
+        return nil, nil
+    }
+
 	ret := nvml.Init()
 	if ret != nvml.SUCCESS {
 		return nil, fmt.Errorf(
@@ -29,13 +42,9 @@ func (b *nvidiaBackend) Read(
 
 	defer nvml.Shutdown()
 
-	result := make([]applicationGPU.RawGPUState, 0)
+	result := make([]applicationGPU.RawGPUState, 0, len(nvidiaDevices))
 
-	for _, device := range devices {
-		if device.Vendor != "NVIDIA" {
-			continue
-		}
-
+	for _, device := range nvidiaDevices {
 		gpu, err := b.readDevice(device)
 		if err != nil {
 			return nil, err
