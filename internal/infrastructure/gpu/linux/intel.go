@@ -70,9 +70,11 @@ func (b *intelBackend) readDevice(
 	name := readIntelName(devicePath)
 
 	temperature := float64(0)
+	temperatureAvailable := false
 
 	if value, err := readIntelTemperature(devicePath); err == nil {
 		temperature = value
+		temperatureAvailable = true
 	}
 
 	usage, err := b.readIntelUsage(device.BusID)
@@ -84,12 +86,11 @@ func (b *intelBackend) readDevice(
 	}
 
 	return applicationGPU.RawGPUState{
-		Name:        name,
-		Vendor:      "Intel",
-		Usage:       usage,
-		MemoryUsed:  0,
-		MemoryTotal: 0,
-		Temperature: temperature,
+		Name:                 name,
+		Vendor:               "Intel",
+		Usage:                usage,
+		Temperature:          temperature,
+		TemperatureAvailable: temperatureAvailable,
 	}, nil
 }
 

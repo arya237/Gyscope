@@ -76,21 +76,22 @@ func (b *amdBackend) readDevice(
 		)
 	}
 
-	temperature, err := readAMDTemperature(amdgpuPath)
-	if err != nil {
-		return applicationGPU.RawGPUState{}, fmt.Errorf(
-			"read AMD GPU temperature: %w",
-			err,
-		)
+	temperature := float64(0)
+	temperatureAvailable := false
+
+	if value, err := readAMDTemperature(amdgpuPath); err == nil {
+		temperature = value
+		temperatureAvailable = true
 	}
 
 	return applicationGPU.RawGPUState{
-		Name:        name,
-		Vendor:      "AMD",
-		Usage:       usage,
-		MemoryUsed:  memoryUsed,
-		MemoryTotal: memoryTotal,
-		Temperature: temperature,
+		Name:                 name,
+		Vendor:               "AMD",
+		Usage:                usage,
+		MemoryUsed:           memoryUsed,
+		MemoryTotal:          memoryTotal,
+		Temperature:          temperature,
+		TemperatureAvailable: temperatureAvailable,
 	}, nil
 }
 

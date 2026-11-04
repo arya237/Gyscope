@@ -7,5 +7,7 @@ type RawGPUState struct {
 	MemoryUsed  uint64
 	MemoryTotal uint64
 	Temperature float64
+	MemoryAvailable      bool
+	TemperatureAvailable bool
 }
 

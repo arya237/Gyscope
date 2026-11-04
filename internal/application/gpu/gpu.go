@@ -2,7 +2,6 @@ package gpu
 
 import domainGPU "Gyscope/internal/domain/gpu"
 
-
 type GPUUsecase struct {
 	datasource GPUDataSource
 }
@@ -23,16 +22,15 @@ func (u *GPUUsecase) GetState() ([]domainGPU.GPU, error) {
 
 	for _, item := range raw {
 		gpus = append(gpus, domainGPU.GPU{
-			Name:        item.Name,
-			Usage:       item.Usage,
-			MemoryUsed:  item.MemoryUsed,
-			MemoryTotal: item.MemoryTotal,
-			Temperature: item.Temperature,
+			Name:                 item.Name,
+			Usage:                item.Usage,
+			MemoryUsed:           item.MemoryUsed,
+			MemoryTotal:          item.MemoryTotal,
+			MemoryAvailable:      item.MemoryAvailable,
+			Temperature:          item.Temperature,
+			TemperatureAvailable: item.TemperatureAvailable,
 		})
 	}
 
 	return gpus, nil
 }
-
-
-
