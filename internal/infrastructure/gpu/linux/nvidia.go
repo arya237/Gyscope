@@ -94,50 +94,44 @@ func (b *nvidiaBackend) readDevice(
 }
 
 func readNVIDIADevice(
-	device nvml.Device,
+    device nvml.Device,
 ) (applicationGPU.RawGPUState, error) {
-	name, ret := device.GetName()
-	if ret != nvml.SUCCESS {
-		return applicationGPU.RawGPUState{}, fmt.Errorf(
-			"get name: %s",
-			nvml.ErrorString(ret),
-		)
-	}
+    name, ret := device.GetName()
+    if ret != nvml.SUCCESS {
+        return applicationGPU.RawGPUState{}, fmt.Errorf(
+            "get name: %s",
+            nvml.ErrorString(ret),
+        )
+    }
 
-	utilization, ret := device.GetUtilizationRates()
-	if ret != nvml.SUCCESS {
-		return applicationGPU.RawGPUState{}, fmt.Errorf(
-			"get utilization: %s",
-			nvml.ErrorString(ret),
-		)
-	}
+    utilization, ret := device.GetUtilizationRates()
+    if ret != nvml.SUCCESS {
+        return applicationGPU.RawGPUState{}, fmt.Errorf(
+            "get utilization: %s",
+            nvml.ErrorString(ret),
+        )
+    }
 
-	memory, ret := device.GetMemoryInfo()
-	if ret != nvml.SUCCESS {
-		return applicationGPU.RawGPUState{}, fmt.Errorf(
-			"get memory: %s",
-			nvml.ErrorString(ret),
-		)
-	}
+    state := applicationGPU.RawGPUState{
+        Name:   name,
+        Vendor: "NVIDIA",
+        Usage:  float64(utilization.Gpu),
+    }
 
-	temperature, ret := device.GetTemperature(
-		nvml.TEMPERATURE_GPU,
-	)
-	if ret != nvml.SUCCESS {
-		return applicationGPU.RawGPUState{}, fmt.Errorf(
-			"get temperature: %s",
-			nvml.ErrorString(ret),
-		)
-	}
+    memory, ret := device.GetMemoryInfo()
+    if ret == nvml.SUCCESS && memory.Total > 0 {
+        state.MemoryUsed = memory.Used
+        state.MemoryTotal = memory.Total
+        state.MemoryAvailable = true
+    }
 
-	return applicationGPU.RawGPUState{
-		Name:        name,
-		Vendor:      "NVIDIA",
-		Usage:       float64(utilization.Gpu),
-		MemoryUsed:  memory.Used,
-		MemoryTotal: memory.Total,
-		Temperature: float64(temperature),
-	}, nil
+    temperature, ret := device.GetTemperatureV().V1()
+    if ret == nvml.SUCCESS {
+        state.Temperature = float64(temperature.Temperature)
+        state.TemperatureAvailable = true
+    }
+
+    return state, nil
 }
 
 func nvmlBusID(busID [32]int8) string {
