@@ -6,6 +6,7 @@ import (
 	domainmemory "Gyscope/internal/domain/memory"
 	domainprocess "Gyscope/internal/domain/process"
 	domaingpu "Gyscope/internal/domain/gpu"
+	domainnetwork "Gyscope/internal/domain/network"
 
 	"fmt"
 	"strings"
@@ -69,9 +70,11 @@ func (m Model) View() tea.View {
 	row2ContentHeight := row2Height - panelFrame
 
 	gpuPanelWidth := topPanelWidth
-	processPanelWidth := innerWidth - gpuPanelWidth
+	networkPanelWidth := topPanelWidth
+	processPanelWidth := lastTopPanelWidth
 
 	gpuPanel := renderGPU(m.gpus, gpuPanelWidth, row2ContentHeight)
+	networkPanel := renderNetwork(m.network, networkPanelWidth, row2ContentHeight)
 
 	viewportHeight := row2ContentHeight - 2
 
@@ -95,6 +98,7 @@ func (m Model) View() tea.View {
 	row2 := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		gpuPanel,
+		networkPanel,
 		processPanel,
 	)
 
@@ -407,6 +411,28 @@ func renderGPU(gpus []domaingpu.GPU, width, height int) string {
 	}
 
 	return renderPanel(strings.Join(lines, "\n"), width, height)
+}
+
+
+func renderNetwork(network domainnetwork.Network, width, height int) string {
+	content := lipgloss.JoinVertical(
+		lipgloss.Left,
+		labelStyle.Render("NETWORK"),
+		"",
+		valueStyle.Render("↓ DOWNLOAD"),
+		fmt.Sprintf("Speed  %s", formatNetworkSpeed(network.DownloadSpeed)),
+		fmt.Sprintf("Total  %s", formatBytes(network.DownloadTotal)),
+		"",
+		valueStyle.Render("↑ UPLOAD"),
+		fmt.Sprintf("Speed  %s", formatNetworkSpeed(network.UploadSpeed)),
+		fmt.Sprintf("Total  %s", formatBytes(network.UploadTotal)),
+	)
+
+	return renderPanel(content, width, height)
+}
+
+func formatNetworkSpeed(bytesPerSecond uint64) string {
+	return formatBytes(bytesPerSecond) + "/s"
 }
 
 func formatBytes(bytes uint64) string {
