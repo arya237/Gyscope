@@ -375,18 +375,35 @@ func renderGPU(gpus []domaingpu.GPU, width, height int) string {
 			fmt.Sprintf("%.1f%%", g.Usage),
 		)
 
+		temperature := "N/A"
+        if g.TemperatureAvailable {
+            temperature = usageStyle(g.Temperature).Render(
+				fmt.Sprintf("%.1f°C", g.Temperature),
+			)
+        }
+
 		lines = append(
 			lines,
 			"",
 			valueStyle.Render(name),
-			fmt.Sprintf("Usage  %s", usage),
-			renderProgressBar(g.Usage, barWidth),
 			fmt.Sprintf(
-				"Mem    %s / %s",
-				formatBytes(g.MemoryUsed),
-				formatBytes(g.MemoryTotal),
-			),
+                "Usage  %s   Temp  %s",
+                usage,
+                temperature,
+            ),
+			renderProgressBar(g.Usage, barWidth),
 		)
+
+		if g.MemoryAvailable {
+            lines = append(
+                lines,
+                fmt.Sprintf(
+                    "VRAM   %s / %s",
+                    formatBytes(g.MemoryUsed),
+                    formatBytes(g.MemoryTotal),
+                ),
+            )
+        }
 	}
 
 	return renderPanel(strings.Join(lines, "\n"), width, height)
