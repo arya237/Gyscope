@@ -6,6 +6,7 @@ import (
 	applicationmemory "Gyscope/internal/application/memory"
 	applicationprocess "Gyscope/internal/application/process"
 	applicationgpu 		"Gyscope/internal/application/gpu"
+	applicationnetwork   "Gyscope/internal/application/network"
 
 	"Gyscope/internal/delivery/tui"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	Linuxmemory "Gyscope/internal/infrastructure/memory/linux"
 	Linuxprocess "Gyscope/internal/infrastructure/process/linux"
 	Linuxgpu 		"Gyscope/internal/infrastructure/gpu/linux"
+	Linuxnetwork  "Gyscope/internal/infrastructure/network/linux"
 
 	tea "charm.land/bubbletea/v2"
 )
@@ -28,15 +30,18 @@ func main() {
 	diskDatasource := Linuxdisk.NewLinuxDiskDataSource()
 	processDatasource := Linuxprocess.NewLinuxProcessDataSource()
 	gpuDatasource := Linuxgpu.NewLinuxGPUDataSource()
+	networkDatasource := Linuxnetwork.NewLinuxNetworkDatasource()
 
 	cpuUsecase := applicationcpu.NewCpuUseCase(cpuDataSource)
 	memoryUsecase := applicationmemory.NewMemoryUseCase(memoryDataSource)
 	diskUsecase := applicationdisk.NewDiskUseCase(diskDatasource)
 	processUsecase := applicationprocess.NewProcessUseCase(processDatasource)
 	gpuUsecase := applicationgpu.NewGPUUsecase(gpuDatasource)
+	networkUsecase := applicationnetwork.NewNetworkUseCase(networkDatasource)
 
 
-	model := tui.NewModel(cpuUsecase, memoryUsecase, diskUsecase, gpuUsecase, processUsecase)
+
+	model := tui.NewModel(cpuUsecase, memoryUsecase, diskUsecase, gpuUsecase, processUsecase, networkUsecase)
 
 	program := tea.NewProgram(model)
 

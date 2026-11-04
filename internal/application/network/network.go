@@ -21,6 +21,7 @@ type NetworkUseCase struct {
 func NewNetworkUseCase(source NetworkDatasource) *NetworkUseCase{
 	return &NetworkUseCase{
 		source: source,
+		now:                time.Now,
 		previousInterfaces: make(map[string]RawNetworkInterface),
 	}
 }

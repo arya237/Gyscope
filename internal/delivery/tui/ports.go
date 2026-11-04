@@ -6,6 +6,7 @@ import (
 	"Gyscope/internal/domain/gpu"
 	"Gyscope/internal/domain/memory"
 	"Gyscope/internal/domain/process"
+	"Gyscope/internal/domain/network"
 )
 
 type CPUReader interface {
@@ -26,4 +27,8 @@ type ProcessReader interface {
 
 type GPUReader interface {
 	GetState() ([]gpu.GPU, error)
+}
+
+type NetowrkReader interface{
+	GetState() (network.Network, error)
 }

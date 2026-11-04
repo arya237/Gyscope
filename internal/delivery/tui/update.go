@@ -64,6 +64,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.gpuErr = nil
 		}
 
+		networkState, err := m.netowrkReader.GetState()
+		if err != nil{
+			m.netwrokErr = err
+		}else{
+			m.network = networkState
+			m.netwrokErr = nil
+		}
+
 		return m, tickCmd()
 
 	case tea.KeyPressMsg:
