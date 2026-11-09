@@ -3,20 +3,23 @@ package main
 import (
 	applicationcpu "Gyscope/internal/application/cpu"
 	applicationdisk "Gyscope/internal/application/disk"
+	applicationgpu "Gyscope/internal/application/gpu"
 	applicationmemory "Gyscope/internal/application/memory"
+	applicationmonitor "Gyscope/internal/application/monitor"
+	applicationnetwork "Gyscope/internal/application/network"
 	applicationprocess "Gyscope/internal/application/process"
-	applicationgpu 		"Gyscope/internal/application/gpu"
-	applicationnetwork   "Gyscope/internal/application/network"
+	"context"
+	"time"
 
 	"Gyscope/internal/delivery/tui"
 	"fmt"
 
 	Linuxcpu "Gyscope/internal/infrastructure/cpu/linux"
 	Linuxdisk "Gyscope/internal/infrastructure/disk/linux"
+	Linuxgpu "Gyscope/internal/infrastructure/gpu/linux"
 	Linuxmemory "Gyscope/internal/infrastructure/memory/linux"
+	Linuxnetwork "Gyscope/internal/infrastructure/network/linux"
 	Linuxprocess "Gyscope/internal/infrastructure/process/linux"
-	Linuxgpu 		"Gyscope/internal/infrastructure/gpu/linux"
-	Linuxnetwork  "Gyscope/internal/infrastructure/network/linux"
 
 	tea "charm.land/bubbletea/v2"
 )
@@ -39,9 +42,24 @@ func main() {
 	gpuUsecase := applicationgpu.NewGPUUsecase(gpuDatasource)
 	networkUsecase := applicationnetwork.NewNetworkUseCase(networkDatasource)
 
+	collector := applicationmonitor.NewCollector(
+		applicationmonitor.Readers{
+			CPU:     cpuUsecase,
+			GPU:     gpuUsecase,
+			Memory:  memoryUsecase,
+			Process: processUsecase,
+			Network: networkUsecase,
+			Disk:    diskUsecase,
+		},
+		time.Second,
+	)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	model := tui.NewModel(cpuUsecase, memoryUsecase, diskUsecase, gpuUsecase, processUsecase, networkUsecase)
+	go collector.Run(ctx)
+
+	model := tui.NewModel(collector)
 
 	program := tea.NewProgram(model)
 
