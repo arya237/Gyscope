@@ -75,10 +75,7 @@ type Collector struct {
 
 // NewCollector creates a new system collector.
 
-func NewCollector(
-	readers Readers,
-	interval time.Duration,
-) *Collector {
+func NewCollector(readers Readers, interval time.Duration) *Collector {
 	if interval <= 0 {
 		interval = time.Second
 	}

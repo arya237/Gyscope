@@ -13,12 +13,7 @@ import (
 )
 
 type Model struct {
-	cpuReader     CPUReader
-	memoryReader  MemoryReader
-	diskReader    DiskReader
-	gpuReader     GPUReader
-	processReader ProcessReader
-	netowrkReader NetowrkReader
+	snapshotReader SnapshotReader
 
 	cpu       cpu.CPU
 	memory    memory.Memory
@@ -38,21 +33,9 @@ type Model struct {
 	height          int
 }
 
-func NewModel(
-	cpuReader CPUReader,
-	memoryReader MemoryReader,
-	diskReader DiskReader,
-	gpuReader GPUReader,
-	process ProcessReader,
-	Network NetowrkReader,
-) Model {
+func NewModel(snapshotReader SnapshotReader) Model {
 	return Model{
-		cpuReader:       cpuReader,
-		memoryReader:    memoryReader,
-		diskReader:      diskReader,
-		gpuReader:       gpuReader,
-		processReader:   process,
-		netowrkReader:   Network,
+		snapshotReader:  snapshotReader,
 		processViewport: viewport.New(),
 	}
 }

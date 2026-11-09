@@ -1,34 +1,7 @@
 package tui
 
-import (
-	"Gyscope/internal/domain/cpu"
-	"Gyscope/internal/domain/disk"
-	"Gyscope/internal/domain/gpu"
-	"Gyscope/internal/domain/memory"
-	"Gyscope/internal/domain/process"
-	"Gyscope/internal/domain/network"
-)
+import "Gyscope/internal/domain/system"
 
-type CPUReader interface {
-	GetState() (cpu.CPU, error)
-}
-
-type MemoryReader interface {
-	GetState() (memory.Memory, error)
-}
-
-type DiskReader interface {
-	GetState() (disk.Disk, error)
-}
-
-type ProcessReader interface {
-	GetState() ([]process.Process, error)
-}
-
-type GPUReader interface {
-	GetState() ([]gpu.GPU, error)
-}
-
-type NetowrkReader interface{
-	GetState() (network.Network, error)
+type SnapshotReader interface {
+	Snapshot() system.Snapshot
 }

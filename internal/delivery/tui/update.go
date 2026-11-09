@@ -24,53 +24,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case systemTickMsg:
-		cpuState, err := m.cpuReader.GetState()
-		if err != nil {
-			m.cpuErr = err
-		} else {
-			m.cpu = cpuState
-			m.cpuErr = nil
-		}
+		snapshot := m.snapshotReader.Snapshot()
 
-		memoryState, err := m.memoryReader.GetState()
-		if err != nil {
-			m.memoryErr = err
-		} else {
-			m.memory = memoryState
-			m.memoryErr = nil
-		}
-
-		diskState, err := m.diskReader.GetState()
-		if err != nil {
-			m.diskErr = err
-		} else {
-			m.disk = diskState
-			m.diskErr = nil
-		}
-
-		processes, err := m.processReader.GetState()
-		if err != nil {
-			m.processErr = err
-		} else {
-			m.processes = processes
-			m.processErr = nil
-		}
-
-		gpuState, err := m.gpuReader.GetState()
-		if err != nil {
-			m.gpuErr = err
-		} else {
-			m.gpus = gpuState
-			m.gpuErr = nil
-		}
-
-		networkState, err := m.netowrkReader.GetState()
-		if err != nil{
-			m.netwrokErr = err
-		}else{
-			m.network = networkState
-			m.netwrokErr = nil
-		}
+		m.cpu = snapshot.CPU
+		m.memory = snapshot.Memory
+		m.disk = snapshot.Disk
+		m.gpus = snapshot.GPUs
+		m.processes = snapshot.Processes
+		m.network = snapshot.Network
 
 		return m, tickCmd()
 
